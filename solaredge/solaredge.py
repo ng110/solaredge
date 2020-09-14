@@ -11,6 +11,19 @@ __license__ = "MIT"
 
 BASEURL = 'https://monitoringapi.solaredge.com'
 
+def urljoin(*parts):
+    part_list = []
+    for part in parts:
+        p = str(part)
+        if p.endswith('//'):
+            p = p[0:-1]
+        else:
+            p = p.strip('/')
+        part_list.append(p)
+    # join everything together
+    url = '/'.join(part_list)
+    return url
+
 class Solaredge(object):
     """
     Object containing SolarEdge's site API-methods.
@@ -20,56 +33,16 @@ class Solaredge(object):
         """
         To communicate, you need to set a site token.
         Get it from your account.
-
-        Parameters
-        ----------
-        site_token : str
         """
         self.token = site_token
+        self.details = self.get_details()['details']
+        self.siteid = self.details['id']
 
-    def get_list(self, size=100, startIndex=0, searchText="", sortProperty="", sortOrder='ASC', status='Active,Pending'):
-        """
-        Request service locations
-
-        Returns
-        -------
-        dict
-        """
-
-        url = urljoin(BASEURL, "sites", "list")
-
-        params = {
-            'api_key': self.token,
-            'size': size,
-            'startIndex': startIndex,
-            'sortOrder': sortOrder,
-            'status': status
-        }
-
-        if searchText:
-            params['searchText'] = searchText
-
-        if sortProperty:
-            params['sortProperty'] = sortProperty
-
-        r = requests.get(url, params)
-        r.raise_for_status()
-        return r.json()
-
-
-    def get_details(self, site_id):
+    def get_details(self):
         """
         Request service location info
-
-        Parameters
-        ----------
-        site_id : int
-
-        Returns
-        -------
-        dict
         """
-        url = urljoin(BASEURL, "site", site_id, "details")
+        url = urljoin(BASEURL, "site", self.site_id, "details")
         params = {
             'api_key': self.token
         }
@@ -77,20 +50,11 @@ class Solaredge(object):
         r.raise_for_status()
         return r.json()
 
-
-    def get_dataPeriod(self, site_id):
+    def get_dataPeriod(self):
         """
-        Request service location info
-
-        Parameters
-        ----------
-        site_id : int
-
-        Returns
-        -------
-        dict
+        Request start and end date of installation data 
         """
-        url = urljoin(BASEURL, "site", site_id, "dataPeriod")
+        url = urljoin(BASEURL, "site", self.site_id, "dataPeriod")
         params = {
             'api_key': self.token
         }
@@ -98,9 +62,8 @@ class Solaredge(object):
         r.raise_for_status()
         return r.json()
 
-
-    def get_energy(self, site_id, startDate, endDate, timeUnit='DAY'):
-        url = urljoin(BASEURL, "site", site_id, "energy")
+    def get_energy(self, startDate, endDate, timeUnit='DAY'):
+        url = urljoin(BASEURL, "site", self.site_id, "energy")
         params = {
             'api_key': self.token,
             'startDate': startDate,
@@ -111,33 +74,31 @@ class Solaredge(object):
         r.raise_for_status()
         return r.json()
 
-    def get_timeFrameEnergy(self, site_id, startDate, endDate, timeUnit='DAY'):
-        url = urljoin(BASEURL, "site", site_id, "timeFrameEnergy")
-        params = {
-            'api_key': self.token,
-            'startDate': startDate,
-            'endDate': endDate,
-            'timeUnit': timeUnit
-        }
-        r = requests.get(url, params)
-        r.raise_for_status()
-        return r.json()
+    # def get_timeFrameEnergy(self, startDate, endDate, timeUnit='DAY'):
+    #     url = urljoin(BASEURL, "site", self.site_id, "timeFrameEnergy")
+    #     params = {
+    #         'api_key': self.token,
+    #         'startDate': startDate,
+    #         'endDate': endDate,
+    #         'timeUnit': timeUnit
+    #     }
+    #     r = requests.get(url, params)
+    #     r.raise_for_status()
+    #     return r.json()
 
+    # def get_power(self, startTime, endTime):
+    #     url = urljoin(BASEURL, "site", self.site_id, "power")
+    #     params = {
+    #         'api_key': self.token,
+    #         'startTime': startTime,
+    #         'endTime': endTime
+    #     }
+    #     r = requests.get(url, params)
+    #     r.raise_for_status()
+    #     return r.json()
 
-    def get_power(self, site_id, startTime, endTime):
-        url = urljoin(BASEURL, "site", site_id, "power")
-        params = {
-            'api_key': self.token,
-            'startTime': startTime,
-            'endTime': endTime
-        }
-        r = requests.get(url, params)
-        r.raise_for_status()
-        return r.json()
-
-
-    def get_overview(self, site_id):
-        url = urljoin(BASEURL, "site", site_id, "overview")
+    def get_overview(self):
+        url = urljoin(BASEURL, "site", self.site_id, "overview")
         params = {
             'api_key': self.token
         }
@@ -145,8 +106,8 @@ class Solaredge(object):
         r.raise_for_status()
         return r.json()
 
-    def get_powerDetails(self, site_id, startTime, endTime, meters=None):
-        url = urljoin(BASEURL, "site", site_id, "powerDetails")
+    def get_powerDetails(self, startTime, endTime, meters=None):
+        url = urljoin(BASEURL, "site", self.site_id, "powerDetails")
         params = {
             'api_key': self.token,
             'startTime': startTime,
@@ -160,8 +121,8 @@ class Solaredge(object):
         r.raise_for_status()
         return r.json()
 
-    def get_energyDetails(self, site_id, startTime, endTime, meters=None, timeUnit="DAY"):
-        url = urljoin(BASEURL, "site", site_id, "energyDetails")
+    def get_energyDetails(self, startTime, endTime, meters=None, timeUnit="DAY"):
+        url = urljoin(BASEURL, "site", self.site_id, "energyDetails")
         params = {
             'api_key': self.token,
             'startTime': startTime,
@@ -176,54 +137,29 @@ class Solaredge(object):
         r.raise_for_status()
         return r.json()
 
-    def get_currentPowerFlow(self, site_id):
-        url = urljoin(BASEURL, "site", site_id, "currentPowerFlow")
-        params = {
-            'api_key': self.token
-        }
+    # def get_currentPowerFlow(self):
+    #     url = urljoin(BASEURL, "site", self.site_id, "currentPowerFlow")
+    #     params = {
+    #         'api_key': self.token
+    #     }
 
-        r = requests.get(url, params)
-        r.raise_for_status()
-        return r.json()
+    #     r = requests.get(url, params)
+    #     r.raise_for_status()
+    #     return r.json()
 
-    def get_storageData(self, site_id, startTime, endTime, serials=None):
-        url = urljoin(BASEURL, "site", site_id, "storageData")
-        params = {
-            'api_key': self.token,
-            'startTime': startTime,
-            'endTime': endTime
-        }
+    # def get_storageData(self, startTime, endTime, serials=None):
+    #     url = urljoin(BASEURL, "site", self.site_id, "storageData")
+    #     params = {
+    #         'api_key': self.token,
+    #         'startTime': startTime,
+    #         'endTime': endTime
+    #     }
 
-        if serials:
-            params['serials'] = serials.join(',')
+    #     if serials:
+    #         params['serials'] = serials.join(',')
 
-        r = requests.get(url, params)
-        r.raise_for_status()
-        return r.json()
+    #     r = requests.get(url, params)
+    #     r.raise_for_status()
+    #     return r.json()
 
 
-def urljoin(*parts):
-    """
-    Join terms together with forward slashes
-
-    Parameters
-    ----------
-    parts
-
-    Returns
-    -------
-    str
-    """
-    # first strip extra forward slashes (except http:// and the likes) and
-    # create list
-    part_list = []
-    for part in parts:
-        p = str(part)
-        if p.endswith('//'):
-            p = p[0:-1]
-        else:
-            p = p.strip('/')
-        part_list.append(p)
-    # join everything together
-    url = '/'.join(part_list)
-    return url
